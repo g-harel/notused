@@ -1,5 +1,18 @@
 #!/usr/bin/env node
 
-import notused from ".";
+import chalk from "chalk";
 
-notused();
+import notused, {IOptions} from ".";
+
+const opts: IOptions = {
+    dir: process.cwd(),
+    pkg: "package.json",
+};
+
+const [report, error] = notused(opts);
+if (error) {
+    console.log(chalk.bgRed(" "), chalk.red.bold(error));
+    process.exit(1);
+}
+
+console.log(report);
