@@ -1,17 +1,13 @@
 import fs from "fs";
 import path from "path";
 
+import {Checker, IDependency} from "./checker";
+
 export interface IOptions {
-    dir: string;
-    pkg: string;
+    readonly dir: string;
+    readonly pkg: string;
 }
-
-type dependency = {
-    name: string;
-    score: number;
-};
-
-type report = [dependency[], null] | [null, string];
+type report = [IDependency[], null] | [null, string];
 
 const notused = (opts: IOptions): report => {
     const pkgPath = path.join(opts.dir, opts.pkg);
@@ -20,12 +16,17 @@ const notused = (opts: IOptions): report => {
         return [null, `Could not find "${opts.pkg}" in "${opts.dir}"`];
     }
 
-    const pkg = require(pkgPath);
+    const checker = new Checker();
 
-    console.log(pkg.dependencies);
-    console.log(pkg.devDependencies);
+    checker.use(/^@types\/(.*)$/g, (ctx, dep, references) => {
+        const exists = ctx.dep.indexOf(references) >= 0;
+        return {
+            name: dep.name,
+            score: exists ? references : -1,
+        };
+    });
 
-    return [[], null];
+    return [checker.check(require(pkgPath), opts), null];
 };
 
 export default notused;
