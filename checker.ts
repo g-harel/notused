@@ -1,40 +1,32 @@
-import {IOptions} from "./index";
-
-interface IContext {
-    readonly opt: IOptions;
-    readonly dep: string[];
-}
+import {Context} from "./context";
 
 export interface IDependency {
     readonly name: string;
     score: number | string;
 }
 
-type check = (ctx: IContext, dep: IDependency, ...groups: string[]) => IDependency;
+type check = (ctx: Context, dep: IDependency, ...groups: string[]) => IDependency;
 
 export class Checker {
+    private ctx: Context;
     private checks: Array<{
         pattern: RegExp;
         check: check;
     }> = [];
 
+    public constructor(ctx: Context) {
+        this.ctx = ctx;
+    }
+
     public use(pattern: RegExp, check: check): void {
         this.checks.push({pattern, check});
     }
 
-    public check(pkg: any, opt: IOptions): IDependency[] {
-        const deps = [
-            ...Object.keys(pkg.dependencies || {}),
-            ...Object.keys(pkg.devDependencies || {}),
-        ].map((name) => ({
+    public check(): IDependency[] {
+        const deps: IDependency[] = this.ctx.dependencies.map((name) => ({
             name,
             score: 0,
         }));
-
-        const ctx = {
-            opt,
-            dep: deps.map((dep) => dep.name),
-        };
 
         return deps.map((dep) => {
             for (let i = 0; i < this.checks.length; ++i) {
@@ -46,7 +38,7 @@ export class Checker {
                 } else {
                     continue;
                 }
-                return check(ctx, dep, ...match);
+                return check(this.ctx, dep, ...match);
             }
             return dep;
         });
