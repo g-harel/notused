@@ -10,7 +10,7 @@ type check = (ctx: Context, dep: IDependency, ...groups: string[]) => IDependenc
 export class Checker {
     private ctx: Context;
     private checks: Array<{
-        pattern: RegExp;
+        pattern: string | RegExp;
         check: check;
     }> = [];
 
@@ -18,7 +18,7 @@ export class Checker {
         this.ctx = ctx;
     }
 
-    public use(pattern: RegExp, check: check): void {
+    public use(pattern: string | RegExp, check: check): void {
         this.checks.push({pattern, check});
     }
 
@@ -31,14 +31,21 @@ export class Checker {
         return deps.map((dep) => {
             for (let i = 0; i < this.checks.length; ++i) {
                 const {pattern, check} = this.checks[i];
+
+                if (typeof pattern === "string") {
+                    if (pattern === dep.name) {
+                        return check(this.ctx, dep);
+                    } else {
+                        continue;
+                    }
+                }
+
                 pattern.lastIndex = 0;
                 const match = pattern.exec(dep.name);
                 if (match) {
                     match.shift();
-                } else {
-                    continue;
+                    return check(this.ctx, dep, ...match);
                 }
-                return check(this.ctx, dep, ...match);
             }
             return dep;
         });

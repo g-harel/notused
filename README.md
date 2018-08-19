@@ -2,7 +2,6 @@
 
 <!--
 
-checker string matcher
 okwolo regexp exec reset
 
  -->
