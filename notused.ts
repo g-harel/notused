@@ -2,7 +2,8 @@
 
 import chalk from "chalk";
 
-import notused, {IOptions} from ".";
+import notused from ".";
+import {IOptions} from "./context";
 
 const opts: IOptions = {
     dir: process.cwd(),

@@ -2,6 +2,10 @@
 
 <!--
 
+non-breaking false match
+verbose logs
+globby file search
+regexp file content search
 okwolo regexp exec reset
 
  -->

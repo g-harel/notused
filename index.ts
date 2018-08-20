@@ -1,25 +1,16 @@
 import {Checker, IDependency} from "./checker";
-import {Context} from "./context";
+import {Context, IOptions} from "./context";
 
-export interface IOptions {
-    readonly dir: string;
-    readonly pkg: string;
-}
-type report = [IDependency[], null] | [null, string];
-
-const notused = async (opts: IOptions): Promise<report> => {
+const notused = async (opts: IOptions): Promise<IDependency[]> => {
     const ctx = new Context(opts);
     const checker = new Checker(ctx);
 
-    checker.use(/^@types\/(.*)$/g, (ctx, dep, references) => {
-        const exists = ctx.hasDependency(references);
-        return {
-            name: dep.name,
-            score: exists ? references : -1,
-        };
+    checker.use(/^@types\/(.*)$/g, (ctx, _, reference) => {
+        const exists = ctx.hasDependency(reference);
+        return exists ? reference : false;
     });
 
-    return [checker.check(), null];
+    return checker.check();
 };
 
 export default notused;

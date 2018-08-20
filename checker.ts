@@ -1,18 +1,17 @@
 import {Context} from "./context";
 
+type score = boolean | string;
+
 export interface IDependency {
     readonly name: string;
-    score: number | string;
+    score: score;
 }
 
-type check = (ctx: Context, dep: IDependency, ...groups: string[]) => IDependency;
+type check = (ctx: Context, dep: IDependency, ...groups: string[]) => score;
 
 export class Checker {
     private ctx: Context;
-    private checks: Array<{
-        pattern: string | RegExp;
-        check: check;
-    }> = [];
+    private checks: Array<{pattern: string | RegExp; check: check}> = [];
 
     public constructor(ctx: Context) {
         this.ctx = ctx;
@@ -25,16 +24,19 @@ export class Checker {
     public check(): IDependency[] {
         const deps: IDependency[] = this.ctx.dependencies.map((name) => ({
             name,
-            score: 0,
+            score: false,
         }));
 
         return deps.map((dep) => {
+            let score: score = dep.score;
+
             for (let i = 0; i < this.checks.length; ++i) {
                 const {pattern, check} = this.checks[i];
 
                 if (typeof pattern === "string") {
                     if (pattern === dep.name) {
-                        return check(this.ctx, dep);
+                        score = check(this.ctx, dep);
+                        break;
                     } else {
                         continue;
                     }
@@ -44,9 +46,12 @@ export class Checker {
                 const match = pattern.exec(dep.name);
                 if (match) {
                     match.shift();
-                    return check(this.ctx, dep, ...match);
+                    score = check(this.ctx, dep, ...match);
+                    break;
                 }
             }
+
+            dep.score = score;
             return dep;
         });
     }

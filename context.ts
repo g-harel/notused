@@ -1,7 +1,10 @@
 import fs from "fs";
 import path from "path";
 
-import {IOptions} from ".";
+export interface IOptions {
+    readonly dir: string;
+    readonly pkg: string;
+}
 
 export class Context {
     public options: IOptions;
