@@ -2,10 +2,12 @@
 
 <!--
 
-non-breaking false match
-verbose logs
+verbose logs (immutable checker id for grep)
 globby file search
-regexp file content search
+regexp + globby? file content search (list of patterns)
+comments
+tests
+
 okwolo regexp exec reset
 
  -->

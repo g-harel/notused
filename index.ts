@@ -10,6 +10,8 @@ const notused = async (opts: IOptions): Promise<IDependency[]> => {
         return exists ? reference : false;
     });
 
+    checker.use(/t/, () => true);
+
     return checker.check();
 };
 

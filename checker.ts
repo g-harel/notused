@@ -28,7 +28,7 @@ export class Checker {
         }));
 
         return deps.map((dep) => {
-            let score: score = dep.score;
+            let score: score = false;
 
             for (let i = 0; i < this.checks.length; ++i) {
                 const {pattern, check} = this.checks[i];
@@ -36,17 +36,17 @@ export class Checker {
                 if (typeof pattern === "string") {
                     if (pattern === dep.name) {
                         score = check(this.ctx, dep);
-                        break;
-                    } else {
-                        continue;
+                    }
+                } else {
+                    pattern.lastIndex = 0;
+                    const match = pattern.exec(dep.name);
+                    if (match) {
+                        match.shift();
+                        score = check(this.ctx, dep, ...match);
                     }
                 }
 
-                pattern.lastIndex = 0;
-                const match = pattern.exec(dep.name);
-                if (match) {
-                    match.shift();
-                    score = check(this.ctx, dep, ...match);
+                if (score) {
                     break;
                 }
             }
