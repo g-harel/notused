@@ -5,12 +5,14 @@ const notused = async (opts: IOptions): Promise<IDependency[]> => {
     const ctx = new Context(opts);
     const checker = new Checker(ctx);
 
-    checker.use(/^@types\/(.*)$/g, (ctx, _, reference) => {
-        const exists = ctx.hasDependency(reference);
+    checker.use(/^@types\/(.*)$/g, async (ctx, _, reference) => {
+        const exists = await ctx.hasDependency(reference);
         return exists ? reference : false;
     });
 
-    checker.use(/t/, () => true);
+    checker.use("typescript", async (ctx) => {
+        return ctx.hasFile("*.ts");
+    });
 
     return checker.check();
 };

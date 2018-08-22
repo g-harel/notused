@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 
+import globby from "globby";
+
 export interface IOptions {
     readonly dir: string;
     readonly pkg: string;
@@ -26,7 +28,12 @@ export class Context {
         ];
     }
 
-    public hasDependency(name: string) {
+    public async hasDependency(name: string): Promise<boolean> {
         return this.dependencies.indexOf(name) >= 0;
+    }
+
+    public async hasFile(glob: string): Promise<boolean> {
+        const paths = await globby(glob);
+        return !!paths.length;
     }
 }
