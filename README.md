@@ -7,6 +7,8 @@ regexp + globby? file content search (list of patterns)
 comments
 tests
 translate report
+globby exclude/include dirs
+for loop everything
 
 okwolo regexp exec reset
 

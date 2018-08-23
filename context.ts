@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import readline from "readline";
 
 import globby from "globby";
 
@@ -33,7 +34,47 @@ export class Context {
     }
 
     public async hasFile(glob: string): Promise<boolean> {
-        const paths = await globby(glob);
+        const paths = await globby(glob, {
+            cwd: this.options.dir,
+        });
         return !!paths.length;
+    }
+
+    public async hasContent(glob: string, ...patterns: RegExp[]): Promise<boolean> {
+        const paths = await globby(glob, {
+            cwd: this.options.dir,
+        });
+
+        const found: boolean[] = await Promise.all(
+            paths.map((path) => {
+                const fileReader = fs.createReadStream(path);
+                const reader = readline.createInterface({input: fileReader});
+
+                // const a = fs.readFileSync(path).toString();
+                // for (let pattern in patterns) {
+                //     if (a.match(pattern)) {
+                //         return true;
+                //     }
+                // }
+                // return false;
+
+                return new Promise<boolean>((resolve) => {
+                    reader.on("line", (line: string) => {
+                        for (let pattern in patterns) {
+                            const match = line.match(pattern);
+                            if (match) {
+                                resolve(true);
+                            }
+                        }
+                    });
+
+                    reader.on("close", () => {
+                        resolve(false);
+                    });
+                });
+            }),
+        );
+
+        return !!found.find((f) => !!f);
     }
 }

@@ -14,6 +14,14 @@ const notused = async (opts: IOptions): Promise<IDependency[]> => {
         return ctx.hasFile("*.ts");
     });
 
+    checker.use(/.*/g, async (ctx, dep) => {
+        return ctx.hasContent(
+            "**/*.js",
+            new RegExp(`import.*${dep.name}`),
+            new RegExp(`require.*${dep.name}`),
+        );
+    });
+
     return checker.check();
 };
 

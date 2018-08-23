@@ -10,9 +10,11 @@ const opts: IOptions = {
     pkg: "package.json",
 };
 
+console.time();
 notused(opts)
     .then((report) => {
         console.log(report);
+        console.timeEnd();
     })
     .catch((error) => {
         console.log(chalk.bgRed(" "), chalk.red.bold(error));
