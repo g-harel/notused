@@ -40,41 +40,37 @@ export class Context {
         return !!paths.length;
     }
 
-    public async hasContent(glob: string, ...patterns: RegExp[]): Promise<boolean> {
+    public async hasContent(
+        glob: string,
+        ...patterns: Array<string | RegExp>
+    ): Promise<boolean> {
         const paths = await globby(glob, {
             cwd: this.options.dir,
         });
 
-        const found: boolean[] = await Promise.all(
-            paths.map((path) => {
-                const fileReader = fs.createReadStream(path);
-                const reader = readline.createInterface({input: fileReader});
+        const found: Array<Promise<boolean>> = new Array(paths.length);
+        for (let i = 0; i < found.length; ++i) {
+            const fileReader = fs.createReadStream(paths[i]);
+            const reader = readline.createInterface({input: fileReader});
 
-                // const a = fs.readFileSync(path).toString();
-                // for (let pattern in patterns) {
-                //     if (a.match(pattern)) {
-                //         return true;
-                //     }
-                // }
-                // return false;
-
-                return new Promise<boolean>((resolve) => {
-                    reader.on("line", (line: string) => {
-                        for (let pattern in patterns) {
-                            const match = line.match(pattern);
-                            if (match) {
-                                resolve(true);
-                            }
+            found[i] = new Promise<boolean>((resolve) => {
+                reader.on("line", (line: string) => {
+                    for (let pattern in patterns) {
+                        const match = line.match(pattern);
+                        if (match) {
+                            fileReader.close();
+                            resolve(true);
                         }
-                    });
-
-                    reader.on("close", () => {
-                        resolve(false);
-                    });
+                    }
                 });
-            }),
-        );
 
-        return !!found.find((f) => !!f);
+                reader.on("close", () => {
+                    resolve(false);
+                });
+            });
+        }
+
+        const results = await Promise.all(found);
+        return !!results.find((f) => !!f);
     }
 }
