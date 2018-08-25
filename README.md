@@ -6,7 +6,7 @@ verbose logs (immutable checker id for grep)
 comments
 tests
 translate report
-globby exclude/include dirs
+cli + flags
 
 okwolo regexp exec reset
 

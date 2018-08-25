@@ -6,8 +6,9 @@ import notused from ".";
 import {IOptions} from "./context";
 
 const opts: IOptions = {
-    dir: process.cwd(),
-    pkg: "package.json",
+    root: process.cwd(),
+    package: "package.json",
+    exclude: ["node_modules"],
 };
 
 console.time();
