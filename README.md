@@ -7,6 +7,8 @@ comments
 tests
 translate report
 cli + flags
+known ok packages option
+perf
 
 okwolo regexp exec reset
 

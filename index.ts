@@ -15,10 +15,25 @@ const notused = async (opts: IOptions): Promise<IDependency[]> => {
     });
 
     checker.use(/.*/g, async (ctx, dep) => {
+        return ctx.hasScript(dep.name);
+    });
+
+    checker.use(/.*/g, async (ctx, dep) => {
         return ctx.hasContent(
-            "**/*.{js,jsx,ts,tsx}",
+            ["*.json", "!package.json", "!package-lock.json"],
+            dep.name,
+        );
+    });
+
+    checker.use(/.*/g, async (ctx, dep) => {
+        return ctx.pkgHasContent(dep.name);
+    });
+
+    checker.use(/.*/g, async (ctx, dep) => {
+        return ctx.hasContent(
+            ["**/*.{js,jsx,ts,tsx}"],
             new RegExp(`import.*('|")${dep.name}('|")`),
-            new RegExp(`require.*\\(('|")${dep.name}('|")\\)`),
+            new RegExp(`require.*('|")${dep.name}('|")`),
         );
     });
 

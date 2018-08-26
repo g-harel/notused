@@ -7,7 +7,6 @@ import {IOptions} from "./context";
 
 const opts: IOptions = {
     root: process.cwd(),
-    package: "package.json",
     exclude: ["node_modules"],
 };
 
