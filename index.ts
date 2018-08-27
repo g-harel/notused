@@ -5,6 +5,10 @@ const notused = async (opts: IOptions): Promise<IDependency[]> => {
     const ctx = new Context(opts);
     const checker = new Checker(ctx);
 
+    checker.use(/.*/g, async (ctx, dep) => {
+        return ctx.isIgnored(dep.name);
+    });
+
     checker.use(/^@types\/(.*)$/g, async (ctx, _, reference) => {
         const exists = await ctx.hasDependency(reference);
         return exists ? reference : false;

@@ -8,6 +8,7 @@ import {IOptions} from "./context";
 const opts: IOptions = {
     root: process.cwd(),
     exclude: ["node_modules"],
+    ignore: [],
 };
 
 console.time();

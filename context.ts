@@ -7,6 +7,7 @@ import globby from "globby";
 export interface IOptions {
     readonly root: string;
     readonly exclude: string[];
+    readonly ignore: string[];
 }
 
 export class Context {
@@ -105,5 +106,9 @@ export class Context {
             }
         }
         return false;
+    }
+
+    public async isIgnored(name: string): Promise<boolean> {
+        return this.options.ignore.indexOf(name) >= 0;
     }
 }
