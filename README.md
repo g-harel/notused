@@ -6,7 +6,6 @@ verbose logs (immutable checker id for grep)
 comments
 tests
 translate report
-cli + flags
 perf
 
 okwolo regexp exec reset
