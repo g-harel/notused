@@ -2,11 +2,12 @@
 
 <!--
 
+https://github.com/yargs/yargs/blob/efc0970bc8f91359905882b6990ffc0786193068/docs/examples.md
+
+perf (remove context and glob only once)
 verbose logs (immutable checker id for grep)
 comments
 tests
-translate report
-perf
 
 okwolo regexp exec reset
 

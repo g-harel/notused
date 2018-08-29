@@ -2,12 +2,13 @@ import {Context} from "./context";
 
 type score = boolean | string;
 
-export interface IDependency {
+export interface IResult {
     readonly name: string;
     score: score;
+    reason: string;
 }
 
-type check = (ctx: Context, dep: IDependency, ...groups: string[]) => Promise<score>;
+type check = (ctx: Context, name: string, ...groups: string[]) => Promise<score>;
 
 export class Checker {
     private ctx: Context;
@@ -21,13 +22,14 @@ export class Checker {
         this.checks.push({pattern, check});
     }
 
-    public async check(): Promise<IDependency[]> {
-        const deps: IDependency[] = this.ctx.dependencies.map((name) => ({
+    public async check(): Promise<IResult[]> {
+        const deps: IResult[] = this.ctx.dependencies.map((name) => ({
             name,
             score: false,
+            reason: "",
         }));
 
-        return Promise.all(
+        const res = await Promise.all(
             deps.map(async (dep) => {
                 let score: score = false;
 
@@ -36,14 +38,14 @@ export class Checker {
 
                     if (typeof pattern === "string") {
                         if (pattern === dep.name) {
-                            score = await check(this.ctx, dep);
+                            score = await check(this.ctx, dep.name);
                         }
                     } else {
                         pattern.lastIndex = 0;
                         const match = pattern.exec(dep.name);
                         if (match) {
                             match.shift();
-                            score = await check(this.ctx, dep, ...match);
+                            score = await check(this.ctx, dep.name, ...match);
                         }
                     }
 
@@ -56,5 +58,14 @@ export class Checker {
                 return dep;
             }),
         );
+
+        return res.map((dep) => {
+            if (typeof dep.score === "string") {
+                dep.score =
+                    (res.find((d) => d.name === dep.score) || ({} as any)).score ||
+                    false;
+            }
+            return dep;
+        });
     }
 }

@@ -1,12 +1,12 @@
-import {Checker, IDependency} from "./checker";
+import {Checker, IResult} from "./checker";
 import {Context, IOptions} from "./context";
 
-const notused = async (opts: IOptions): Promise<IDependency[]> => {
+const notused = async (opts: IOptions): Promise<IResult[]> => {
     const ctx = new Context(opts);
     const checker = new Checker(ctx);
 
-    checker.use(/.*/g, async (ctx, dep) => {
-        return ctx.isIgnored(dep.name);
+    checker.use(/.*/g, async (ctx, name) => {
+        return ctx.isIgnored(name);
     });
 
     checker.use(/^@types\/(.*)$/g, async (ctx, _, reference) => {
@@ -18,26 +18,26 @@ const notused = async (opts: IOptions): Promise<IDependency[]> => {
         return ctx.hasFile("*.ts");
     });
 
-    checker.use(/.*/g, async (ctx, dep) => {
-        return ctx.hasScript(dep.name);
+    checker.use(/.*/g, async (ctx, name) => {
+        return ctx.hasScript(name);
     });
 
-    checker.use(/.*/g, async (ctx, dep) => {
+    checker.use(/.*/g, async (ctx, name) => {
         return ctx.hasContent(
             ["*.json", "!package.json", "!package-lock.json"],
-            dep.name,
+            name,
         );
     });
 
-    checker.use(/.*/g, async (ctx, dep) => {
-        return ctx.pkgHasContent(dep.name);
+    checker.use(/.*/g, async (ctx, name) => {
+        return ctx.pkgHasContent(name);
     });
 
-    checker.use(/.*/g, async (ctx, dep) => {
+    checker.use(/.*/g, async (ctx, name) => {
         return ctx.hasContent(
             ["**/*.{js,jsx,ts,tsx}"],
-            new RegExp(`import.*('|")${dep.name}('|")`),
-            new RegExp(`require.*('|")${dep.name}('|")`),
+            new RegExp(`import.*('|")${name}('|")`),
+            new RegExp(`require.*('|")${name}('|")`),
         );
     });
 
