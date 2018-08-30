@@ -30,7 +30,7 @@ const opts: IOptions = {
 console.time();
 notused(opts)
     .then((report) => {
-        console.log(report);
+        console.log(...report.map((r) => r.name + "\t" + r.score + "\n"));
         console.timeEnd();
     })
     .catch((error) => {

@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
-import readline from "readline";
 
-import globby from "globby";
+import multimatch from "multimatch";
+
+import {allFilePaths, scanFile} from "./service";
 
 export interface IOptions {
     readonly root: string;
@@ -22,19 +23,19 @@ export class Context {
     }
 
     private globby(...patterns: string[]) {
+        const paths = allFilePaths(this.options.root);
         patterns.push(...this.options.exclude.map((pattern) => "!" + pattern));
-        return globby(patterns, {
-            cwd: this.options.root,
-        });
+        return multimatch(paths, patterns);
     }
 
     public constructor(options: IOptions) {
         this.options = options;
 
+        // TODO remove fs package
         const pkgPath = path.join(options.root, "package.json");
         const exists = fs.existsSync(pkgPath);
         if (!exists) {
-            throw new Error(`Could not find "package.json" in "${options.root}"`);
+            throw new Error(`Could not read "package.json" in "${options.root}"`);
         }
 
         this.pkg = require(pkgPath) || {};
@@ -66,32 +67,23 @@ export class Context {
     ): Promise<boolean> {
         const paths = await this.globby(...glob);
 
-        const found: Array<Promise<boolean>> = new Array(paths.length);
-        for (let i = 0; i < found.length; ++i) {
-            const fileReader = fs.createReadStream(
-                path.join(this.options.root, paths[i]),
-            );
-            const reader = readline.createInterface({input: fileReader});
-
-            found[i] = new Promise<boolean>((resolve) => {
-                reader.on("line", (line: string) => {
-                    for (let pattern of patterns) {
-                        const match = line.match(pattern);
-                        if (match) {
-                            fileReader.close();
-                            resolve(true);
-                        }
+        let found = false;
+        const done: Array<Promise<any>> = new Array(paths.length);
+        for (let i = 0; i < done.length; ++i) {
+            done[i] = scanFile(paths[i], (line) => {
+                for (let pattern of patterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        found = true;
+                        break;
                     }
-                });
-
-                reader.on("close", () => {
-                    resolve(false);
-                });
+                }
+                return found;
             });
         }
 
-        const results = await Promise.all(found);
-        return !!results.find((f) => !!f);
+        await Promise.all(done);
+        return found;
     }
 
     public async pkgHasContent(
