@@ -1,9 +1,14 @@
-import fs from "fs";
 import path from "path";
 
+import mem from "mem";
 import multimatch from "multimatch";
 
 import {allFilePaths, scanFile} from "./service";
+
+const pkg = "package.json";
+
+const _allFilePaths = mem(allFilePaths);
+const _multimatch = mem(multimatch);
 
 export interface IOptions {
     readonly root: string;
@@ -13,7 +18,7 @@ export interface IOptions {
 
 export class Context {
     private pkg: any;
-    public readonly options: IOptions;
+    private options!: IOptions;
 
     get dependencies(): string[] {
         return [
@@ -23,22 +28,35 @@ export class Context {
     }
 
     private globby(...patterns: string[]) {
-        const paths = allFilePaths(this.options.root);
-        patterns.push(...this.options.exclude.map((pattern) => "!" + pattern));
-        return multimatch(paths, patterns);
+        const paths = _allFilePaths(this.options.root, this.options.exclude);
+        return _multimatch(paths, patterns);
     }
 
-    public constructor(options: IOptions) {
-        this.options = options;
+    public static async fromOptions(options: IOptions): Promise<Context> {
+        const ctx = new Context();
+        ctx.options = options;
 
-        // TODO remove fs package
-        const pkgPath = path.join(options.root, "package.json");
-        const exists = fs.existsSync(pkgPath);
-        if (!exists) {
-            throw new Error(`Could not read "package.json" in "${options.root}"`);
+        let content = "";
+        const ok = await scanFile(
+            path.join(options.root, pkg),
+            (chunk) => {
+                content += chunk;
+                return false;
+            },
+        );
+        if (!ok) {
+            throw new Error(`Could not read "${pkg}" in "${options.root}"`);
         }
 
-        this.pkg = require(pkgPath) || {};
+        try {
+            ctx.pkg = JSON.parse(content);
+        } catch (e) {
+            throw new Error(
+                `Could not parse contents of "${pkg}" in "${options.root}"`,
+            );
+        }
+
+        return ctx;
     }
 
     public async hasDependency(name: string): Promise<boolean> {

@@ -2,7 +2,7 @@ import {Checker, IResult} from "./checker";
 import {Context, IOptions} from "./context";
 
 const notused = async (opts: IOptions): Promise<IResult[]> => {
-    const ctx = new Context(opts);
+    const ctx = await Context.fromOptions(opts);
     const checker = new Checker(ctx);
 
     checker.use(/.*/g, async (ctx, name) => {

@@ -2,20 +2,18 @@ import fs from "fs";
 import readline from "readline";
 
 import globby from "globby";
-import mem from "mem";
 
-export const allFilePaths = mem(
-    (cwd: string): string[] => {
-        return globby.sync("**", {
-            absolute: true,
-            cwd,
-        });
-    },
-);
+export const allFilePaths = (cwd: string, ignore: string[]): string[] => {
+    return globby.sync("**", {
+        absolute: true,
+        ignore,
+        cwd,
+    });
+};
 
 export const scanFile = async (
     path: string,
-    cb: (chunk: string) => boolean,
+    handler: (chunk: string) => boolean,
 ): Promise<boolean> => {
     if (!fs.existsSync(path)) {
         return false;
@@ -26,7 +24,7 @@ export const scanFile = async (
     const fileReader = fs.createReadStream(path);
     const reader = readline.createInterface({input: fileReader});
     reader.on("line", (line: string) => {
-        const close = cb(line);
+        const close = handler(line);
         if (close) {
             reader.close();
         }
